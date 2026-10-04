@@ -15,21 +15,34 @@ st.set_page_config(
 GEMINI_KEY = st.secrets.get("GEMINI_API_KEY", "")
 
 
-# 3. Retry Logic Function to Handle 503 / Transient Errors
-def generate_content_with_retry(
-    client, prompt, model="gemini-2.5-flash", max_retries=3
+# 3. Helper Function to Handle 503 Overload and 404 Model Errors
+def generate_with_fallback(
+    client, prompt, models=["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
 ):
-    """503 error එකක් ආවොත් automatically තත්පර කිහිපයකින් retry කරයි."""
-    for attempt in range(max_retries):
-        try:
-            return client.models.generate_content(model=model, contents=prompt)
-        except Exception as e:
-            error_msg = str(e)
-            if "503" in error_msg or "UNAVAILABLE" in error_msg:
-                if attempt < max_retries - 1:
-                    time.sleep(2 * (attempt + 1))  # Delay 2s, 4s...
-                    continue
-            raise e
+    """
+    Tries primary available Gemini models and handles:
+    - 503 Server Busy errors (Retries current model)
+    - 404 Model Not Found errors (Switches to backup model)
+    """
+    for model_name in models:
+        for attempt in range(3):
+            try:
+                return client.models.generate_content(
+                    model=model_name, contents=prompt
+                )
+            except Exception as e:
+                err = str(e)
+                # Handle 503 / Temporary Server Overload
+                if "503" in err or "UNAVAILABLE" in err:
+                    if attempt < 2:
+                        time.sleep(2 * (attempt + 1))  # Delay 2s, 4s...
+                        continue
+                # Handle 404 / Model Not Found -> Switch model
+                elif "404" in err or "NOT_FOUND" in err:
+                    break
+                else:
+                    raise e
+    raise Exception("Unable to connect to Gemini models. Please check your API key or network connection.")
 
 
 # 4. UI Styling
@@ -38,29 +51,13 @@ st.markdown(
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-    * {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-    }
+    * { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .stApp { background-color: #f8fafc; }
 
-    .stApp {
-        background-color: #f8fafc;
-    }
+    section[data-testid="stSidebar"] { background-color: #0d1322 !important; }
+    section[data-testid="stSidebar"] * { color: #f1f5f9 !important; }
+    section[data-testid="stSidebar"] .stMarkdown p { color: #94a3b8 !important; font-size: 0.9rem; }
 
-    /* Sidebar Background & Styling */
-    section[data-testid="stSidebar"] {
-        background-color: #0d1322 !important;
-    }
-
-    section[data-testid="stSidebar"] * {
-        color: #f1f5f9 !important;
-    }
-
-    section[data-testid="stSidebar"] .stMarkdown p {
-        color: #94a3b8 !important;
-        font-size: 0.9rem;
-    }
-
-    /* Custom File Uploader Box Styling */
     section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
         background-color: #172033 !important;
         border: 2px dashed #3b82f6 !important;
@@ -82,7 +79,6 @@ st.markdown(
         width: 100% !important;
     }
 
-    /* Gradient Banner Header */
     .hero-banner {
         background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #06b6d4 100%);
         padding: 2.5rem 2.8rem;
@@ -109,7 +105,6 @@ st.markdown(
         font-weight: 500;
     }
 
-    /* Feature Cards */
     .feature-card {
         background: #ffffff;
         border: 1px solid #f1f5f9;
@@ -124,25 +119,10 @@ st.markdown(
         justify-content: center;
     }
 
-    .feature-icon {
-        font-size: 2.2rem;
-        margin-bottom: 1rem;
-    }
+    .feature-icon { font-size: 2.2rem; margin-bottom: 1rem; }
+    .feature-title { font-weight: 700; color: #0f172a; font-size: 1.1rem; margin-bottom: 0.6rem; }
+    .feature-desc { color: #64748b; font-size: 0.88rem; line-height: 1.5; }
 
-    .feature-title {
-        font-weight: 700;
-        color: #0f172a;
-        font-size: 1.1rem;
-        margin-bottom: 0.6rem;
-    }
-
-    .feature-desc {
-        color: #64748b;
-        font-size: 0.88rem;
-        line-height: 1.5;
-    }
-
-    /* Stat Cards Dashboard */
     .stat-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
@@ -152,21 +132,9 @@ st.markdown(
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
     }
 
-    .stat-val {
-        font-size: 1.2rem;
-        font-weight: 800;
-        color: #2563eb;
-    }
+    .stat-val { font-size: 1.2rem; font-weight: 800; color: #2563eb; }
+    .stat-lbl { font-size: 0.78rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-top: 0.2rem; }
 
-    .stat-lbl {
-        font-size: 0.78rem;
-        color: #64748b;
-        font-weight: 600;
-        text-transform: uppercase;
-        margin-top: 0.2rem;
-    }
-
-    /* Action Buttons */
     .stButton > button {
         width: 100%;
         background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
@@ -235,7 +203,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 7. Main Logic
+# 7. Main Application Logic
 if uploaded_file is not None:
     text_content = ""
     page_count = 0
@@ -287,8 +255,7 @@ if uploaded_file is not None:
 
     if not GEMINI_KEY:
         st.error(
-            "❌ Gemini API Key missing! Please set GEMINI_API_KEY in Streamlit Cloud"
-            " Secrets."
+            "❌ Gemini API Key missing! Please set GEMINI_API_KEY in Streamlit Cloud Secrets."
         )
     else:
         ai_client = genai.Client(api_key=GEMINI_KEY.strip())
@@ -304,9 +271,7 @@ if uploaded_file is not None:
                             f" technical terms.\n\nText:\n{text_content[:8000]}"
                         )
 
-                        res = generate_content_with_retry(
-                            ai_client, prompt, model="gemini-2.5-flash"
-                        )
+                        res = generate_with_fallback(ai_client, prompt)
                         st.markdown(
                             f'<div class="output-box">{res.text}</div>',
                             unsafe_allow_html=True,
@@ -330,9 +295,7 @@ if uploaded_file is not None:
                                 f" {user_q}"
                             )
 
-                            res = generate_content_with_retry(
-                                ai_client, prompt, model="gemini-2.5-flash"
-                            )
+                            res = generate_with_fallback(ai_client, prompt)
                             st.markdown(
                                 f'<div class="output-box">{res.text}</div>',
                                 unsafe_allow_html=True,
