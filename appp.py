@@ -1,5 +1,5 @@
 import time
-import google.genai as genai
+import google.generativeai as genai
 import pdfplumber
 import streamlit as st
 
@@ -14,35 +14,34 @@ st.set_page_config(
 # 2. Get API Key Safely from Streamlit Secrets
 GEMINI_KEY = st.secrets.get("GEMINI_API_KEY", "")
 
+if GEMINI_KEY:
+    genai.configure(api_key=GEMINI_KEY.strip())
 
-# 3. Helper Function to Handle 503 Overload and 404 Model Errors
-def generate_with_fallback(
-    client, prompt, models=["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+
+# 3. Helper Function with Fallback Models & Retry Logic
+def generate_response_with_retry(
+    prompt, models=["gemini-1.5-flash", "gemini-1.5-pro"]
 ):
-    """
-    Tries primary available Gemini models and handles:
-    - 503 Server Busy errors (Retries current model)
-    - 404 Model Not Found errors (Switches to backup model)
-    """
+    last_error = None
     for model_name in models:
         for attempt in range(3):
             try:
-                return client.models.generate_content(
-                    model=model_name, contents=prompt
-                )
+                model = genai.GenerativeModel(model_name)
+                response = model.generate_content(prompt)
+                return response.text
             except Exception as e:
-                err = str(e)
-                # Handle 503 / Temporary Server Overload
-                if "503" in err or "UNAVAILABLE" in err:
-                    if attempt < 2:
-                        time.sleep(2 * (attempt + 1))  # Delay 2s, 4s...
-                        continue
-                # Handle 404 / Model Not Found -> Switch model
-                elif "404" in err or "NOT_FOUND" in err:
+                last_error = e
+                err_str = str(e)
+                # Retry if 503 Server Unavailable
+                if "503" in err_str or "UNAVAILABLE" in err_str:
+                    time.sleep(2 * (attempt + 1))
+                    continue
+                # If model not found (404), try next model in loop
+                elif "404" in err_str or "NOT_FOUND" in err_str:
                     break
                 else:
                     raise e
-    raise Exception("Unable to connect to Gemini models. Please check your API key or network connection.")
+    raise Exception(f"Failed after retries. Last error: {last_error}")
 
 
 # 4. UI Styling
@@ -258,8 +257,6 @@ if uploaded_file is not None:
             "❌ Gemini API Key missing! Please set GEMINI_API_KEY in Streamlit Cloud Secrets."
         )
     else:
-        ai_client = genai.Client(api_key=GEMINI_KEY.strip())
-
         with tab1:
             st.markdown("### 📌 Lecture & Document Summary")
             if st.button("🚀 Summarize Document", key="sum_btn"):
@@ -271,9 +268,9 @@ if uploaded_file is not None:
                             f" technical terms.\n\nText:\n{text_content[:8000]}"
                         )
 
-                        res = generate_with_fallback(ai_client, prompt)
+                        res_text = generate_response_with_retry(prompt)
                         st.markdown(
-                            f'<div class="output-box">{res.text}</div>',
+                            f'<div class="output-box">{res_text}</div>',
                             unsafe_allow_html=True,
                         )
                     except Exception as e:
@@ -295,9 +292,9 @@ if uploaded_file is not None:
                                 f" {user_q}"
                             )
 
-                            res = generate_with_fallback(ai_client, prompt)
+                            res_text = generate_response_with_retry(prompt)
                             st.markdown(
-                                f'<div class="output-box">{res.text}</div>',
+                                f'<div class="output-box">{res_text}</div>',
                                 unsafe_allow_html=True,
                             )
                         except Exception as e:
