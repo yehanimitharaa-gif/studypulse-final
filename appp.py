@@ -50,7 +50,7 @@ st.markdown(
         font-weight: 500;
     }
 
-    /* Sidebar Base Styling */
+    /* Sidebar Styling */
     section[data-testid="stSidebar"] {
         background-color: #0f172a !important;
     }
@@ -64,7 +64,7 @@ st.markdown(
         font-size: 0.92rem;
     }
 
-    /* Upload Box Styling Fix */
+    /* Upload Box Custom Styling */
     section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
         background-color: #1e293b !important;
         border: 2px dashed #4f46e5 !important;
@@ -168,7 +168,7 @@ st.markdown(
         transform: translateY(-2px);
     }
 
-    /* Output Container */
+    /* Output Box */
     .output-box {
         background: #ffffff;
         border-left: 5px solid #4f46e5;
@@ -185,23 +185,33 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 3. Groq API Setup & Model Definition
+# 3. Secure API Key Retrieval & Groq Client Setup
 GROQ_API_KEY = st.secrets.get("GROQ_API_KEY", "")
 
+# Fallback check if user defined it in st.session_state or environment
 if not GROQ_API_KEY:
-  st.error("⚠️ `GROQ_API_KEY` missing! Add it under Streamlit Secrets.")
+  st.error(
+      "⚠️ `GROQ_API_KEY` is missing! Please verify your Streamlit secrets"
+      " settings."
+  )
   st.stop()
 
-client = Groq(api_key=GROQ_API_KEY)
+# Initialize Groq client with explicit key
+client = Groq(api_key=str(GROQ_API_KEY).strip())
 
-# ✅ Updated valid Groq model identifier
-PRIMARY_MODEL = "llama3-8b-8192"
-
-# 4. Sidebar Panel
+# 4. Sidebar Control Panel
 with st.sidebar:
   st.markdown("## 📚 Study Hub")
   st.markdown("Upload your lecture slides or notes to get started.")
   st.divider()
+
+  # Model Selection Dropdown for Reliability
+  selected_model = st.selectbox(
+      "🤖 Select AI Model",
+      options=["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "gemma2-9b-it"],
+      index=0,
+      help="Switch model if you encounter rate limits or availability issues.",
+  )
 
   uploaded_file = st.file_uploader(
       "📄 Upload Lecture PDF",
@@ -216,7 +226,7 @@ with st.sidebar:
   st.markdown("3. **Ask questions** for exams & assignments.")
 
   st.divider()
-  st.caption("⚡ Powered by Groq Llama 3 | Built for Students")
+  st.caption("⚡ Powered by Groq AI | Built for Students")
 
 # 5. Header Banner
 st.markdown(
@@ -241,7 +251,7 @@ if uploaded_file is not None:
       if extracted:
         text_content += extracted + "\n"
 
-  # Metrics
+  # Active Document Stat Dashboard
   c1, c2, c3 = st.columns(3)
   with c1:
     st.markdown(
@@ -307,14 +317,14 @@ if uploaded_file is not None:
                       ),
                   },
               ],
-              model=PRIMARY_MODEL,
+              model=selected_model,
           )
           st.markdown(
               f'<div class="output-box">{response.choices[0].message.content}</div>',
               unsafe_allow_html=True,
           )
         except Exception as e:
-          st.error(f"Error: {e}")
+          st.error(f"API Error: {e}")
 
   # Tab 2: Q&A
   with tab2:
@@ -349,14 +359,14 @@ if uploaded_file is not None:
                         ),
                     },
                 ],
-                model=PRIMARY_MODEL,
+                model=selected_model,
             )
             st.markdown(
                 f'<div class="output-box">{response.choices[0].message.content}</div>',
                 unsafe_allow_html=True,
             )
           except Exception as e:
-            st.error(f"Error: {e}")
+            st.error(f"API Error: {e}")
       else:
         st.warning("Please type a question first!")
 
