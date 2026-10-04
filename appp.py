@@ -286,7 +286,7 @@ if uploaded_file is not None:
             )
 
             res = ai_client.models.generate_content(
-                model="gemini-2.5-flash", contents=prompt
+                model="gemini-1.5-flash", contents=prompt
             )
             st.markdown(
                 f'<div class="output-box">{res.text}</div>',
@@ -312,7 +312,7 @@ if uploaded_file is not None:
               )
 
               res = ai_client.models.generate_content(
-                  model="gemini-2.5-flash", contents=prompt
+                  model="gemini-1.5-flash", contents=prompt
               )
               st.markdown(
                   f'<div class="output-box">{res.text}</div>',
