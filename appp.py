@@ -14,8 +14,12 @@ st.set_page_config(
 # 2. Get API Key Safely from Streamlit Secrets
 GEMINI_KEY = st.secrets.get("GEMINI_API_KEY", "")
 
-# 3. Helper Function with Retry Logic & Updated Model Name
-def generate_content_with_retry(client, prompt, model="gemini-3.8-flash", max_retries=3):
+
+# 3. Retry Logic Function to Handle 503 / Transient Errors
+def generate_content_with_retry(
+    client, prompt, model="gemini-2.5-flash", max_retries=3
+):
+    """503 error එකක් ආවොත් automatically තත්පර කිහිපයකින් retry කරයි."""
     for attempt in range(max_retries):
         try:
             return client.models.generate_content(model=model, contents=prompt)
@@ -23,9 +27,10 @@ def generate_content_with_retry(client, prompt, model="gemini-3.8-flash", max_re
             error_msg = str(e)
             if "503" in error_msg or "UNAVAILABLE" in error_msg:
                 if attempt < max_retries - 1:
-                    time.sleep(2 * (attempt + 1))
+                    time.sleep(2 * (attempt + 1))  # Delay 2s, 4s...
                     continue
             raise e
+
 
 # 4. UI Styling
 st.markdown(
@@ -300,7 +305,7 @@ if uploaded_file is not None:
                         )
 
                         res = generate_content_with_retry(
-                            ai_client, prompt, model="gemini-3.8-flash"
+                            ai_client, prompt, model="gemini-2.5-flash"
                         )
                         st.markdown(
                             f'<div class="output-box">{res.text}</div>',
@@ -326,7 +331,7 @@ if uploaded_file is not None:
                             )
 
                             res = generate_content_with_retry(
-                                ai_client, prompt, model="gemini-3.8-flash"
+                                ai_client, prompt, model="gemini-2.5-flash"
                             )
                             st.markdown(
                                 f'<div class="output-box">{res.text}</div>',
