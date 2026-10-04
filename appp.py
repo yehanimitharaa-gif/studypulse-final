@@ -10,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# 2. Student-Friendly UI Styling
+# 2. Student-Friendly & High-Contrast CSS
 st.markdown(
     """
     <style>
@@ -50,7 +50,7 @@ st.markdown(
         font-weight: 500;
     }
 
-    /* Sidebar High-Contrast Fixes */
+    /* Sidebar Base Styling */
     section[data-testid="stSidebar"] {
         background-color: #0f172a !important;
     }
@@ -64,7 +64,41 @@ st.markdown(
         font-size: 0.92rem;
     }
 
-    /* Welcome Feature Cards */
+    /* --- FIX FOR UPLOAD BOX CONTRAST & LOOK --- */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
+        background-color: #1e293b !important;
+        border: 2px dashed #4f46e5 !important;
+        border-radius: 14px !important;
+        padding: 1rem !important;
+        transition: all 0.3s ease-in-out !important;
+    }
+
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"]:hover {
+        border-color: #38bdf8 !important;
+        background-color: #334155 !important;
+        box-shadow: 0 4px 14px rgba(56, 189, 248, 0.2) !important;
+    }
+
+    /* Inner Dropzone Overrides */
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] {
+        background-color: transparent !important;
+        border: none !important;
+    }
+
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] * {
+        color: #f8fafc !important;
+    }
+
+    /* Upload Button Inside Dropzone */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] button {
+        background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%) !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+    }
+
+    /* Feature Cards for Landing View */
     .feature-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
@@ -94,7 +128,7 @@ st.markdown(
         line-height: 1.4;
     }
 
-    /* Metric Cards */
+    /* Stat Dashboard Cards */
     .stat-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
@@ -136,7 +170,7 @@ st.markdown(
         transform: translateY(-2px);
     }
 
-    /* Custom Response Container */
+    /* Response Container */
     .output-box {
         background: #ffffff;
         border-left: 5px solid #4f46e5;
@@ -163,7 +197,7 @@ if not GROQ_API_KEY:
 client = Groq(api_key=GROQ_API_KEY)
 PRIMARY_MODEL = "llama-3.1-8b-instant"
 
-# 4. Sidebar Control Panel
+# 4. Sidebar Panel
 with st.sidebar:
   st.markdown("## 📚 Study Hub")
   st.markdown("Upload your lecture slides or notes to get started.")
@@ -195,7 +229,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. Main Content / Workspace
+# 6. Main Workspace Pipeline
 if uploaded_file is not None:
   text_content = ""
   page_count = 0
@@ -207,7 +241,7 @@ if uploaded_file is not None:
       if extracted:
         text_content += extracted + "\n"
 
-  # Active Document Metrics
+  # Metrics
   c1, c2, c3 = st.columns(3)
   with c1:
     st.markdown(
