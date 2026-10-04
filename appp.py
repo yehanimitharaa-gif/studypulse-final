@@ -18,7 +18,7 @@ client = Groq(api_key=GROQ_API_KEY)
 
 # Custom UI Title
 st.title("📚 StudyPulse AI Assistant")
-st.caption("Powered by Groq Llama-3.1 & Streamlit Cloud")
+st.caption("Powered by Groq & Streamlit Cloud")
 
 uploaded_file = st.file_uploader(
     "📄 Upload Lecture Notes or Document (PDF)", type=["pdf"]
@@ -59,7 +59,7 @@ if uploaded_file is not None:
                       ),
                   },
               ],
-              model="llama-3.1-8b-instant",
+              model="openai/gpt-oss-20b",
           )
           st.write(response.choices[0].message.content)
         except Exception as e:
@@ -93,7 +93,7 @@ if uploaded_file is not None:
                         ),
                     },
                 ],
-                model="llama-3.1-8b-instant",
+                model="openai/gpt-oss-20b",
             )
             st.write(response.choices[0].message.content)
           except Exception as e:
