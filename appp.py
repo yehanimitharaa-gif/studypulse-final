@@ -64,7 +64,7 @@ st.markdown(
         font-size: 0.92rem;
     }
 
-    /* --- FIX FOR UPLOAD BOX CONTRAST & LOOK --- */
+    /* Upload Box Styling Fix */
     section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
         background-color: #1e293b !important;
         border: 2px dashed #4f46e5 !important;
@@ -79,7 +79,6 @@ st.markdown(
         box-shadow: 0 4px 14px rgba(56, 189, 248, 0.2) !important;
     }
 
-    /* Inner Dropzone Overrides */
     section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] {
         background-color: transparent !important;
         border: none !important;
@@ -89,7 +88,6 @@ st.markdown(
         color: #f8fafc !important;
     }
 
-    /* Upload Button Inside Dropzone */
     section[data-testid="stSidebar"] [data-testid="stFileUploader"] button {
         background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%) !important;
         color: #ffffff !important;
@@ -98,7 +96,7 @@ st.markdown(
         font-weight: 600 !important;
     }
 
-    /* Feature Cards for Landing View */
+    /* Feature Cards */
     .feature-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
@@ -128,7 +126,7 @@ st.markdown(
         line-height: 1.4;
     }
 
-    /* Stat Dashboard Cards */
+    /* Stat Cards */
     .stat-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
@@ -150,7 +148,7 @@ st.markdown(
         letter-spacing: 0.05em;
     }
 
-    /* Primary Action Buttons */
+    /* Buttons */
     .stButton > button {
         width: 100%;
         background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
@@ -170,7 +168,7 @@ st.markdown(
         transform: translateY(-2px);
     }
 
-    /* Response Container */
+    /* Output Container */
     .output-box {
         background: #ffffff;
         border-left: 5px solid #4f46e5;
@@ -187,7 +185,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 3. Groq API Setup
+# 3. Groq API Setup & Model Definition
 GROQ_API_KEY = st.secrets.get("GROQ_API_KEY", "")
 
 if not GROQ_API_KEY:
@@ -195,7 +193,9 @@ if not GROQ_API_KEY:
   st.stop()
 
 client = Groq(api_key=GROQ_API_KEY)
-PRIMARY_MODEL = "llama-3.1-8b-instant"
+
+# ✅ Updated valid Groq model identifier
+PRIMARY_MODEL = "llama3-8b-8192"
 
 # 4. Sidebar Panel
 with st.sidebar:
@@ -216,7 +216,7 @@ with st.sidebar:
   st.markdown("3. **Ask questions** for exams & assignments.")
 
   st.divider()
-  st.caption("⚡ Powered by Groq Llama-3.1 | Built for Students")
+  st.caption("⚡ Powered by Groq Llama 3 | Built for Students")
 
 # 5. Header Banner
 st.markdown(
@@ -229,7 +229,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. Main Workspace Pipeline
+# 6. Main Workspace
 if uploaded_file is not None:
   text_content = ""
   page_count = 0
@@ -361,7 +361,7 @@ if uploaded_file is not None:
         st.warning("Please type a question first!")
 
 else:
-  # Empty State Display
+  # Landing View
   st.markdown("### 🌟 What you can do with StudyPulse:")
   f1, f2, f3 = st.columns(3)
 
