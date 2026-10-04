@@ -4,174 +4,198 @@ import streamlit as st
 
 # 1. Page Configuration
 st.set_page_config(
-    page_title="StudyPulse AI | Intelligent Workspace",
+    page_title="StudyPulse AI | Smart Study Assistant",
     page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# 2. Modern Enterprise CSS Injection
+# 2. Student-Friendly UI Styling
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-    html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
+    * {
+        font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
+    /* Main App Background */
     .stApp {
         background: #f8fafc;
     }
 
-    /* Top Navigation Bar Branding */
-    .brand-header {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        padding: 1.8rem 2rem;
-        border-radius: 16px;
+    /* Hero Banner */
+    .hero-container {
+        background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 50%, #06b6d4 100%);
+        padding: 2.2rem 2.5rem;
+        border-radius: 20px;
         color: #ffffff;
-        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);
+        box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.3);
         margin-bottom: 2rem;
     }
     
-    .brand-title {
-        font-size: 2rem;
-        font-weight: 700;
-        letter-spacing: -0.025em;
+    .hero-title {
+        font-size: 2.2rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
         margin: 0;
         color: #ffffff;
     }
 
-    .brand-subtitle {
-        font-size: 0.95rem;
-        color: #94a3b8;
-        margin-top: 0.3rem;
-    }
-
-    /* Sidebar Refinement */
-    section[data-testid="stSidebar"] {
-        background-color: #0f172a;
-        border-right: 1px solid #1e293b;
-    }
-    
-    section[data-testid="stSidebar"] h1, 
-    section[data-testid="stSidebar"] h2, 
-    section[data-testid="stSidebar"] h3, 
-    section[data-testid="stSidebar"] span,
-    section[data-testid="stSidebar"] p,
-    section[data-testid="stSidebar"] label {
-        color: #f8fafc !important;
-    }
-
-    /* Metric Cards */
-    .metric-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        padding: 1.25rem;
-        border-radius: 12px;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-        text-align: center;
-    }
-
-    .metric-value {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #2563eb;
-    }
-
-    .metric-label {
-        font-size: 0.85rem;
-        color: #64748b;
+    .hero-subtitle {
+        font-size: 1rem;
+        color: #e0e7ff;
+        margin-top: 0.4rem;
         font-weight: 500;
     }
 
-    /* Styled Action Buttons */
+    /* Sidebar High-Contrast Fixes */
+    section[data-testid="stSidebar"] {
+        background-color: #0f172a !important;
+    }
+    
+    section[data-testid="stSidebar"] * {
+        color: #f1f5f9 !important;
+    }
+
+    section[data-testid="stSidebar"] .stMarkdown p {
+        color: #cbd5e1 !important;
+        font-size: 0.92rem;
+    }
+
+    /* Welcome Feature Cards */
+    .feature-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    .feature-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.15);
+    }
+    .feature-icon {
+        font-size: 2.2rem;
+        margin-bottom: 0.8rem;
+    }
+    .feature-title {
+        font-weight: 700;
+        color: #1e293b;
+        font-size: 1.1rem;
+        margin-bottom: 0.4rem;
+    }
+    .feature-desc {
+        color: #64748b;
+        font-size: 0.88rem;
+        line-height: 1.4;
+    }
+
+    /* Metric Cards */
+    .stat-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        padding: 1rem 1.25rem;
+        border-radius: 14px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        text-align: center;
+    }
+    .stat-val {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: #4f46e5;
+    }
+    .stat-lbl {
+        font-size: 0.82rem;
+        color: #64748b;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Primary Action Buttons */
     .stButton > button {
         width: 100%;
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
         color: #ffffff !important;
-        font-weight: 600;
+        font-weight: 700;
         font-size: 0.95rem;
-        border-radius: 10px;
-        padding: 0.65rem 1.25rem;
+        border-radius: 12px;
+        padding: 0.7rem 1.25rem;
         border: none;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
         transition: all 0.2s ease-in-out;
     }
 
     .stButton > button:hover {
-        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
-        transform: translateY(-1px);
+        background: linear-gradient(135deg, #4338ca 0%, #2563eb 100%);
+        box-shadow: 0 6px 18px rgba(79, 70, 229, 0.4);
+        transform: translateY(-2px);
     }
 
-    /* Response Container Styling */
-    .response-card {
+    /* Custom Response Container */
+    .output-box {
         background: #ffffff;
-        border-left: 4px solid #2563eb;
-        border-top: 1px solid #e2e8f0;
-        border-right: 1px solid #e2e8f0;
-        border-bottom: 1px solid #e2e8f0;
-        border-radius: 8px;
+        border-left: 5px solid #4f46e5;
+        border-radius: 12px;
         padding: 1.5rem;
         margin-top: 1rem;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         color: #334155;
-        line-height: 1.6;
+        font-size: 0.98rem;
+        line-height: 1.7;
     }
     </style>
 """,
     unsafe_allow_html=True,
 )
 
-# 3. Security & API Client Initialization
+# 3. Groq API Setup
 GROQ_API_KEY = st.secrets.get("GROQ_API_KEY", "")
 
 if not GROQ_API_KEY:
-  st.error(
-      "⚠️ Security Verification Failed: `GROQ_API_KEY` is missing from"
-      " Streamlit Cloud Secrets."
-  )
+  st.error("⚠️ `GROQ_API_KEY` missing! Add it under Streamlit Secrets.")
   st.stop()
 
 client = Groq(api_key=GROQ_API_KEY)
 PRIMARY_MODEL = "llama-3.1-8b-instant"
 
-# 4. Sidebar Control Center
+# 4. Sidebar Control Panel
 with st.sidebar:
-  st.markdown("### ⚙️ Workspace Config")
-  st.caption("Manage document feeds and API processing settings.")
+  st.markdown("## 📚 Study Hub")
+  st.markdown("Upload your lecture slides or notes to get started.")
   st.divider()
 
   uploaded_file = st.file_uploader(
-      "Upload Academic PDF",
+      "📄 Upload Lecture PDF",
       type=["pdf"],
-      help="Select a document up to 200MB for real-time analysis.",
+      help="Supports PDF notes, slides, and past papers.",
   )
 
   st.divider()
-  st.markdown("### 📋 Platform Guide")
-  st.markdown("""
-    - **Step 1:** Upload your lecture notes or reference material.
-    - **Step 2:** Choose **Executive Summary** or **Interactive Q&A**.
-    - **Step 3:** Trigger context analysis powered by **Groq Llama-3.1**.
-    """)
+  st.markdown("### 🚀 Quick Steps")
+  st.markdown("1. **Upload** your PDF above.")
+  st.markdown("2. **Summarize** complex topics fast.")
+  st.markdown("3. **Ask questions** for exams & assignments.")
 
   st.divider()
-  st.caption("🔒 Enterprise Encryption & Memory Isolation Enabled")
+  st.caption("⚡ Powered by Groq Llama-3.1 | Built for Students")
 
-# 5. Application Banner
+# 5. Header Banner
 st.markdown(
     """
-    <div class="brand-header">
-        <div class="brand-title">🎓 StudyPulse AI Engine</div>
-        <div class="brand-subtitle">Automated Academic PDF Context Extraction, Bullet Summarization & Deep Q&A Platform</div>
+    <div class="hero-container">
+        <div class="hero-title">🎓 StudyPulse AI Assistant</div>
+        <div class="hero-subtitle">Your AI study buddy for instant lecture summaries, exam prep, and PDF Q&A</div>
     </div>
 """,
     unsafe_allow_html=True,
 )
 
-# 6. Primary Workspace Pipeline
+# 6. Main Content / Workspace
 if uploaded_file is not None:
   text_content = ""
   page_count = 0
@@ -183,35 +207,35 @@ if uploaded_file is not None:
       if extracted:
         text_content += extracted + "\n"
 
-  # System Metadata Dashboard
-  col1, col2, col3 = st.columns(3)
-  with col1:
+  # Active Document Metrics
+  c1, c2, c3 = st.columns(3)
+  with c1:
     st.markdown(
         f"""
-            <div class="metric-card">
-                <div class="metric-value">📄 Active</div>
-                <div class="metric-label">{uploaded_file.name[:20]}...</div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-val">📄 {uploaded_file.name[:18]}...</div>
+            <div class="stat-lbl">Active Document</div>
+        </div>
         """,
         unsafe_allow_html=True,
     )
-  with col2:
+  with c2:
     st.markdown(
         f"""
-            <div class="metric-card">
-                <div class="metric-value">{page_count} Pages</div>
-                <div class="metric-label">Document Volume</div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-val">{page_count} Pages</div>
+            <div class="stat-lbl">Total Volume</div>
+        </div>
         """,
         unsafe_allow_html=True,
     )
-  with col3:
+  with c3:
     st.markdown(
         f"""
-            <div class="metric-card">
-                <div class="metric-value">{len(text_content)}</div>
-                <div class="metric-label">Parsed Characters</div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-val">{len(text_content)}</div>
+            <div class="stat-lbl">Extracted Characters</div>
+        </div>
         """,
         unsafe_allow_html=True,
     )
@@ -219,70 +243,68 @@ if uploaded_file is not None:
   st.markdown("<br>", unsafe_allow_html=True)
 
   tab1, tab2 = st.tabs([
-      "📌 Executive Summary Engine",
-      "🔍 Deep Document Context Q&A",
+      "📌 Smart Summarizer & Key Points",
+      "💬 Exam & Assignment Assistant",
   ])
 
-  # Tab 1: Summarization Module
+  # Tab 1: Summarizer
   with tab1:
-    st.markdown("### 📝 High-Impact Executive Summary")
-    st.caption("Extract key takeaways, core findings, and structured notes.")
+    st.markdown("### 📝 Instant Lecture Summary")
+    st.caption("Get structured bullet points, key concepts, and exam notes.")
 
-    if st.button("⚡ Synthesize Key Takeaways", key="summarize_action"):
-      with st.spinner("Processing text context through LLM engine..."):
+    if st.button("✨ Summarize Document", key="sum_btn"):
+      with st.spinner("Analyzing lecture notes..."):
         try:
           response = client.chat.completions.create(
               messages=[
                   {
                       "role": "system",
                       "content": (
-                          "You are an elite academic research assistant."
-                          " Provide a highly structured executive summary using"
-                          " bold category headers, concise bullet points, and a"
-                          " key takeaway block."
+                          "You are an expert university study partner. Summarize"
+                          " the text into clear bullet points, bold key"
+                          " terms, and highlight main exam takeaways."
                       ),
                   },
                   {
                       "role": "user",
                       "content": (
-                          f"Text:\n{text_content[:3500]}\n\nSummarize main"
-                          " points:"
+                          f"Text:\n{text_content[:3500]}\n\nProvide key"
+                          " study points:"
                       ),
                   },
               ],
               model=PRIMARY_MODEL,
           )
           st.markdown(
-              f'<div class="response-card">{response.choices[0].message.content}</div>',
+              f'<div class="output-box">{response.choices[0].message.content}</div>',
               unsafe_allow_html=True,
           )
         except Exception as e:
-          st.error(f"Execution Error: {e}")
+          st.error(f"Error: {e}")
 
-  # Tab 2: Contextual Q&A Module
+  # Tab 2: Q&A
   with tab2:
-    st.markdown("### 🔍 Context-Grounded Query Assistant")
+    st.markdown("### 🔍 Ask Anything About Your PDF")
     st.caption(
-        "Ask specific questions based strictly on the uploaded document's"
-        " content."
+        "Type your question below to get answers grounded in your document."
     )
 
     user_question = st.text_input(
-        "Enter query:",
-        placeholder="e.g., What are the core methodologies discussed?",
+        "Enter question:",
+        placeholder="e.g., What are the key formulas/definitions discussed?",
     )
 
-    if st.button("💡 Execute Query Search", key="qa_action"):
+    if st.button("💡 Find Answer", key="qa_btn"):
       if user_question.strip():
-        with st.spinner("Analyzing context vectors..."):
+        with st.spinner("Searching document notes..."):
           try:
             response = client.chat.completions.create(
                 messages=[
                     {
                         "role": "system",
                         "content": (
-                            "Answer questions accurately and concisely strictly"
-                            " based on the provided document context."
+                            "Answer accurately based strictly on the provided"
+                            " document context."
                         ),
                     },
                     {
@@ -296,15 +318,57 @@ if uploaded_file is not None:
                 model=PRIMARY_MODEL,
             )
             st.markdown(
-                f'<div class="response-card">{response.choices[0].message.content}</div>',
+                f'<div class="output-box">{response.choices[0].message.content}</div>',
                 unsafe_allow_html=True,
             )
           except Exception as e:
-            st.error(f"Execution Error: {e}")
+            st.error(f"Error: {e}")
       else:
-        st.warning("Please specify a valid question before running query.")
+        st.warning("Please type a question first!")
+
 else:
+  # Empty State Display
+  st.markdown("### 🌟 What you can do with StudyPulse:")
+  f1, f2, f3 = st.columns(3)
+
+  with f1:
+    st.markdown(
+        """
+        <div class="feature-card">
+            <div class="feature-icon">📑</div>
+            <div class="feature-title">Fast Summaries</div>
+            <div class="feature-desc">Convert lengthy lecture slides into quick bullet points before your lectures or exams.</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+  with f2:
+    st.markdown(
+        """
+        <div class="feature-card">
+            <div class="feature-icon">❓</div>
+            <div class="feature-title">Smart Q&A</div>
+            <div class="feature-desc">Ask specific questions and get clear answers based strictly on your uploaded materials.</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+  with f3:
+    st.markdown(
+        """
+        <div class="feature-card">
+            <div class="feature-icon">🎓</div>
+            <div class="feature-title">Exam Prep</div>
+            <div class="feature-desc">Extract key concepts, definitions, and important takeaways in seconds.</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+  st.markdown("<br>", unsafe_allow_html=True)
   st.info(
-      "👈 **Workspace Idle:** Upload a document from the left control panel to"
-      " initialize the processing pipeline."
+      "👈 **Get Started:** Upload a PDF from the **Left Sidebar** to start using"
+      " StudyPulse!"
   )
