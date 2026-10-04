@@ -11,26 +11,47 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# 2. Get API Key Safely from Streamlit Secrets
+# 2. Configure API Key
 GEMINI_KEY = st.secrets.get("GEMINI_API_KEY", "")
 
 if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY.strip())
 
 
-# 3. Robust Helper Function (Fixes 404 & 503 Errors)
-def generate_response_with_retry(
-    prompt, models=["gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-pro"]
-):
+# 3. Smart Model Resolver & Fallback Function
+def generate_response_with_retry(prompt):
+    """
+    Finds working text generation models dynamically for the given API key
+    and handles transient server overloads (503).
+    """
+    # 1. Try finding available models dynamically from the user's API key
+    try:
+        available_models = [
+            m.name
+            for m in genai.list_models()
+            if "generateContent" in m.supported_generation_methods
+        ]
+    except Exception:
+        available_models = []
+
+    # Fallback default models if list_models API fails
+    preferred_models = [
+        "models/gemini-1.5-flash",
+        "models/gemini-1.5-flash-latest",
+        "models/gemini-pro",
+    ]
+
+    candidate_models = available_models if available_models else preferred_models
     last_error = None
-    for model_name in models:
+
+    for model_name in candidate_models:
         try:
             model = genai.GenerativeModel(model_name)
-            # Retries for 503 Overload
             for attempt in range(3):
                 try:
                     response = model.generate_content(prompt)
-                    return response.text
+                    if response and response.text:
+                        return response.text
                 except Exception as inner_e:
                     err_str = str(inner_e)
                     if "503" in err_str or "UNAVAILABLE" in err_str:
@@ -40,10 +61,11 @@ def generate_response_with_retry(
                         raise inner_e
         except Exception as outer_e:
             last_error = outer_e
-            # If model is 404/not supported, gracefully skip to the next model
             continue
 
-    raise Exception(f"Failed to generate content. Last Error: {last_error}")
+    raise Exception(
+        f"Unable to process request with available models. Last error: {last_error}"
+    )
 
 
 # 4. UI Styling
@@ -305,7 +327,7 @@ if uploaded_file is not None:
                     st.warning("Please enter a question first.")
 
 else:
-    st.markdown("### ☀️ What you can do with StudyPulse:")
+    st.markdown("### ☀️️ What you can do with StudyPulse:")
     st.markdown("<br>", unsafe_allow_html=True)
 
     f1, f2, f3 = st.columns(3)
