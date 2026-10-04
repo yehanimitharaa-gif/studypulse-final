@@ -18,30 +18,32 @@ if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY.strip())
 
 
-# 3. Helper Function with Fallback Models & Retry Logic
+# 3. Robust Helper Function (Fixes 404 & 503 Errors)
 def generate_response_with_retry(
-    prompt, models=["gemini-1.5-flash", "gemini-1.5-pro"]
+    prompt, models=["gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-pro"]
 ):
     last_error = None
     for model_name in models:
-        for attempt in range(3):
-            try:
-                model = genai.GenerativeModel(model_name)
-                response = model.generate_content(prompt)
-                return response.text
-            except Exception as e:
-                last_error = e
-                err_str = str(e)
-                # Retry if 503 Server Unavailable
-                if "503" in err_str or "UNAVAILABLE" in err_str:
-                    time.sleep(2 * (attempt + 1))
-                    continue
-                # If model not found (404), try next model in loop
-                elif "404" in err_str or "NOT_FOUND" in err_str:
-                    break
-                else:
-                    raise e
-    raise Exception(f"Failed after retries. Last error: {last_error}")
+        try:
+            model = genai.GenerativeModel(model_name)
+            # Retries for 503 Overload
+            for attempt in range(3):
+                try:
+                    response = model.generate_content(prompt)
+                    return response.text
+                except Exception as inner_e:
+                    err_str = str(inner_e)
+                    if "503" in err_str or "UNAVAILABLE" in err_str:
+                        time.sleep(2 * (attempt + 1))
+                        continue
+                    else:
+                        raise inner_e
+        except Exception as outer_e:
+            last_error = outer_e
+            # If model is 404/not supported, gracefully skip to the next model
+            continue
+
+    raise Exception(f"Failed to generate content. Last Error: {last_error}")
 
 
 # 4. UI Styling
