@@ -10,7 +10,10 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# 2. UI Styling
+# 2. Hardcoded Gemini API Key (User ට Enter කරන්න අවශ්‍ය නැත)
+GEMINI_KEY = "AQ.Ab8RN6IyoctNM9lsIoGEWoFeV1kqHR8Nu8u9_LSDlrx7QmX2Uw"
+
+# 3. UI Styling
 st.markdown(
     """
     <style>
@@ -184,20 +187,11 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 3. Gemini API Setup (Free & Streamlit Cloud Friendly)
-GEMINI_KEY = st.secrets.get("GEMINI_API_KEY", "")
-
+# 4. Sidebar View (API Key Input එක අයින් කර ඇත)
 with st.sidebar:
   st.markdown("## 📚 Study Hub")
   st.markdown("Upload your lecture slides or notes to get started.")
   st.divider()
-
-  if not GEMINI_KEY:
-    GEMINI_KEY = st.text_input(
-        "🔑 Gemini API Key",
-        type="password",
-        help="Get free key at aistudio.google.com",
-    )
 
   uploaded_file = st.file_uploader(
       "Upload Lecture PDF",
@@ -211,7 +205,7 @@ with st.sidebar:
   st.markdown("2. **Summarize** complex topics fast.")
   st.markdown("3. **Ask questions** for exams & assignments.")
 
-# 4. Hero Banner
+# 5. Hero Banner
 st.markdown(
     """
     <div class="hero-banner">
@@ -222,7 +216,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 5. Main Logic
+# 6. Main Logic
 if uploaded_file is not None:
   text_content = ""
   page_count = 0
@@ -272,22 +266,42 @@ if uploaded_file is not None:
       ["📌 Key Points Summarizer", "❓ Smart Q&A Assistant"]
   )
 
-  if not GEMINI_KEY:
-    st.warning(
-        "👈 Please enter a Google Gemini API key in the sidebar to run queries."
-    )
-  else:
-    ai_client = genai.Client(api_key=GEMINI_KEY.strip())
+  ai_client = genai.Client(api_key=GEMINI_KEY.strip())
 
-    with tab1:
-      st.markdown("### 📌 Lecture & Document Summary")
-      if st.button("🚀 Summarize Document", key="sum_btn"):
-        with st.spinner("Processing document..."):
+  with tab1:
+    st.markdown("### 📌 Lecture & Document Summary")
+    if st.button("🚀 Summarize Document", key="sum_btn"):
+      with st.spinner("Processing document..."):
+        try:
+          prompt = (
+              "You are a helpful university study assistant. Summarize the key"
+              " points clearly using bullet points and bold core technical"
+              f" terms.\n\nText:\n{text_content[:8000]}"
+          )
+
+          res = ai_client.models.generate_content(
+              model="gemini-2.5-flash", contents=prompt
+          )
+          st.markdown(
+              f'<div class="output-box">{res.text}</div>',
+              unsafe_allow_html=True,
+          )
+        except Exception as e:
+          st.error(f"Error: {e}")
+
+  with tab2:
+    st.markdown("### ❓ Ask Questions About Your PDF")
+    user_q = st.text_input(
+        "Question:", placeholder="e.g., Explain the core concepts in chapter 1"
+    )
+    if st.button("💡 Find Answer", key="qa_btn"):
+      if user_q.strip():
+        with st.spinner("Searching document content..."):
           try:
             prompt = (
-                "You are a helpful university study assistant. Summarize the"
-                " key points clearly using bullet points and bold core"
-                f" technical terms.\n\nText:\n{text_content[:8000]}"
+                "Answer questions accurately based on the provided"
+                f" context.\n\nContext:\n{text_content[:8000]}\n\nQuestion:"
+                f" {user_q}"
             )
 
             res = ai_client.models.generate_content(
@@ -299,34 +313,8 @@ if uploaded_file is not None:
             )
           except Exception as e:
             st.error(f"Error: {e}")
-
-    with tab2:
-      st.markdown("### ❓ Ask Questions About Your PDF")
-      user_q = st.text_input(
-          "Question:",
-          placeholder="e.g., Explain the core concepts in chapter 1",
-      )
-      if st.button("💡 Find Answer", key="qa_btn"):
-        if user_q.strip():
-          with st.spinner("Searching document content..."):
-            try:
-              prompt = (
-                  "Answer questions accurately based on the provided"
-                  f" context.\n\nContext:\n{text_content[:8000]}\n\nQuestion:"
-                  f" {user_q}"
-              )
-
-              res = ai_client.models.generate_content(
-                  model="gemini-2.5-flash", contents=prompt
-              )
-              st.markdown(
-                  f'<div class="output-box">{res.text}</div>',
-                  unsafe_allow_html=True,
-              )
-            except Exception as e:
-              st.error(f"Error: {e}")
-        else:
-          st.warning("Please enter a question first.")
+      else:
+        st.warning("Please enter a question first.")
 
 else:
   st.markdown("### ☀️ What you can do with StudyPulse:")
