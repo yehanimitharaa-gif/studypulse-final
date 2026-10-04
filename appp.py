@@ -1,3 +1,4 @@
+import time
 import google.genai as genai
 import pdfplumber
 import streamlit as st
@@ -13,7 +14,23 @@ st.set_page_config(
 # 2. Get API Key Safely from Streamlit Secrets
 GEMINI_KEY = st.secrets.get("GEMINI_API_KEY", "")
 
-# 3. UI Styling
+# 3. Helper Function to Call Gemini API with Auto-Retry Logic (Fixes 503 Errors)
+def generate_content_with_retry(client, prompt, model="gemini-2.5-flash", max_retries=3):
+    """
+    503 UNAVAILABLE දෝෂයක් ආවොත් තත්පර කිහිපයක් බලා සිට නැවත auto-try කරයි.
+    """
+    for attempt in range(max_retries):
+        try:
+            return client.models.generate_content(model=model, contents=prompt)
+        except Exception as e:
+            error_msg = str(e)
+            if "503" in error_msg or "UNAVAILABLE" in error_msg:
+                if attempt < max_retries - 1:
+                    time.sleep(2 * (attempt + 1))  # 2s, 4s delay
+                    continue
+            raise e
+
+# 4. UI Styling
 st.markdown(
     """
     <style>
@@ -187,7 +204,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 4. Sidebar View
+# 5. Sidebar View
 with st.sidebar:
     st.markdown("## 📚 Study Hub")
     st.markdown("Upload your lecture slides or notes to get started.")
@@ -205,7 +222,7 @@ with st.sidebar:
     st.markdown("2. **Summarize** complex topics fast.")
     st.markdown("3. **Ask questions** for exams & assignments.")
 
-# 5. Hero Banner
+# 6. Hero Banner
 st.markdown(
     """
     <div class="hero-banner">
@@ -216,7 +233,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 6. Main Logic
+# 7. Main Logic
 if uploaded_file is not None:
     text_content = ""
     page_count = 0
@@ -285,8 +302,8 @@ if uploaded_file is not None:
                             f" technical terms.\n\nText:\n{text_content[:8000]}"
                         )
 
-                        res = ai_client.models.generate_content(
-                            model="gemini-3.8-flash", contents=prompt
+                        res = generate_content_with_retry(
+                            ai_client, prompt, model="gemini-2.5-flash"
                         )
                         st.markdown(
                             f'<div class="output-box">{res.text}</div>',
@@ -311,8 +328,8 @@ if uploaded_file is not None:
                                 f" {user_q}"
                             )
 
-                            res = ai_client.models.generate_content(
-                                model="gemini-3.8-flash", contents=prompt
+                            res = generate_content_with_retry(
+                                ai_client, prompt, model="gemini-2.5-flash"
                             )
                             st.markdown(
                                 f'<div class="output-box">{res.text}</div>',
